@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Доступные тесты{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="color: #2d3748; margin-bottom: 20px; font-size: 1.8em;">Доступные тесты</h2>
+    
+    {% if tests %}
+        <div style="margin-bottom: 30px;">
+            <p style="color: #718096; font-size: 1.1em;">Выберите тест для прохождения:</p>
+        </div>
+        
+        {% for test in tests %}
+        <div class="test-card">
+            <div class="test-title">{{ test.title }}</div>
+            {% if test.description %}
+                <div class="test-description">{{ test.description }}</div>
+            {% endif %}
+            <div class="test-meta">
+                <div class="test-questions">
+                    📝 {{ test.question_count }} вопросов
+                </div>
+                <a href="{% url 'start_test' test.id %}" class="btn">Начать тест</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 4em; margin-bottom: 20px;">📚</div>
+            <h3 style="color: #4a5568; margin-bottom: 10px;">Нет доступных тестов</h3>
+            <p style="color: #718096;">Обратитесь к администратору для создания тестов.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% if user.is_authenticated %}
+<div class="card">
+    <h3 style="color: #2d3748; margin-bottom: 15px;">Администратор</h3>
+    <p style="color: #718096; margin-bottom: 20px;">Управляйте тестами и просматривайте результаты</p>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="/admin/" class="btn">🛠️ Админ-панель</a>
+        <a href="{% url 'test_results' %}" class="btn btn-secondary">📊 Результаты тестов</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Результаты тестов{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="color: #2d3748; margin-bottom: 20px; font-size: 1.8em;">📊 Результаты всех тестов</h2>
+    
+    <!-- Фильтры -->
+    <form method="get" style="background: rgba(102, 126, 234, 0.1); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
+        <h3 style="color: #2d3748; margin-bottom: 15px;">🔍 Фильтрация результатов</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div class="form-group">
+                <label for="student_name" class="form-label">ФИО ученика</label>
+                <input 
+                    type="text" 
+                    id="student_name" 
+                    name="student_name" 
+                    class="form-input" 
+                    value="{{ current_filters.student_name|default:'' }}"
+                    placeholder="Поиск по имени"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="student_class" class="form-label">Класс</label>
+                <input 
+                    type="text" 
+                    id="student_class" 
+                    name="student_class" 
+                    class="form-input" 
+                    value="{{ current_filters.student_class|default:'' }}"
+                    placeholder="Например: 9А"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="test" class="form-label">Тест</label>
+                <select id="test" name="test" class="form-input">
+                    <option value="">Все тесты</option>
+                    {% for test in tests %}
+                        <option value="{{ test.id }}" {% if current_filters.test|stringformat:"s" == test.id|stringformat:"s" %}selected{% endif %}>
+                            {{ test.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button type="submit" class="btn">
+                🔍 Применить фильтры
+            </button>
+            <a href="{% url 'test_results' %}" class="btn btn-secondary">
+                ❌ Сбросить
+            </a>
+        </div>
+    </form>
+    
+    <!-- Статистика -->
+    {% if page_obj.object_list %}
+        <div style="background: rgba(72, 187, 120, 0.1); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
+            <h3 style="color: #2d3748; margin-bottom: 15px;">📈 Общая статистика</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: 700; color: #2e7d32;">
+                        {{ page_obj.paginator.count }}
+                    </div>
+                    <div style="color: #4a5568;">Всего прохождений</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: 700; color: #1976d2;">
+                        {% if page_obj.object_list %}
+                            {{ page_obj.object_list|length }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <div style="color: #4a5568;">На этой странице</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2em; font-weight: 700; color: #f57f17;">
+                        {% if page_obj.object_list %}
+                            {{ tests.count }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <div style="color: #4a5568;">Доступных тестов</div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Таблица результатов -->
+    {% if page_obj.object_list %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <thead style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
+                    <tr>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">👤 Ученик</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">🎓 Класс</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">📚 Тест</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">✅ Правильно</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">📊 Процент</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">⏰ Время</th>
+                        <th style="padding: 15px; text-align: center; font-weight: 600;">📅 Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student_test in page_obj.object_list %}
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background-color 0.3s ease;">
+                        <td style="padding: 15px; font-weight: 600; color: #2d3748;">{{ student_test.student_name }}</td>
+                        <td style="padding: 15px; color: #4a5568;">{{ student_test.student_class }}</td>
+                        <td style="padding: 15px; color: #4a5568;">{{ student_test.test.title }}</td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="background: rgba(72, 187, 120, 0.2); color: #2e7d32; padding: 4px 12px; border-radius: 15px; font-weight: 600;">
+                                {{ student_test.score }}/{{ student_test.total_questions }}
+                            </span>
+                        </td>
+                        <td style="padding: 15px; text-align: center;">
+                            <span style="background: {% if student_test.percentage >= 80 %}rgba(72, 187, 120, 0.2); color: #2e7d32{% elif student_test.percentage >= 60 %}rgba(245, 158, 11, 0.2); color: #f57f17{% else %}rgba(239, 68, 68, 0.2); color: #dc2626{% endif %}; padding: 4px 12px; border-radius: 15px; font-weight: 600;">
+                                {{ student_test.percentage|floatformat:1 }}%
+                            </span>
+                        </td>
+                        <td style="padding: 15px; text-align: center; color: #4a5568;">
+                            {% if student_test.completed_at %}
+                                {{ student_test.completed_at|timesince:student_test.started_at }}
+                            {% else %}
+                                Не завершен
+                            {% endif %}
+                        </td>
+                        <td style="padding: 15px; text-align: center; color: #4a5568; font-size: 14px;">
+                            {{ student_test.started_at|date:"d.m.Y H:i" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Пагинация -->
+        {% if page_obj.has_other_pages %}
+            <div style="text-align: center; margin-top: 30px;">
+                <div style="display: inline-flex; gap: 10px; align-items: center;">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if current_filters.student_name %}&student_name={{ current_filters.student_name }}{% endif %}{% if current_filters.student_class %}&student_class={{ current_filters.student_class }}{% endif %}{% if current_filters.test %}&test={{ current_filters.test }}{% endif %}" class="btn btn-secondary">
+                            ⏮️ Первая
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if current_filters.student_name %}&student_name={{ current_filters.student_name }}{% endif %}{% if current_filters.student_class %}&student_class={{ current_filters.student_class }}{% endif %}{% if current_filters.test %}&test={{ current_filters.test }}{% endif %}" class="btn btn-secondary">
+                            ← Предыдущая
+                        </a>
+                    {% endif %}
+                    
+                    <span style="background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 10px 20px; border-radius: 25px; font-weight: 600;">
+                        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if current_filters.student_name %}&student_name={{ current_filters.student_name }}{% endif %}{% if current_filters.student_class %}&student_class={{ current_filters.student_class }}{% endif %}{% if current_filters.test %}&test={{ current_filters.test }}{% endif %}" class="btn btn-secondary">
+                            Следующая →
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.student_name %}&student_name={{ current_filters.student_name }}{% endif %}{% if current_filters.student_class %}&student_class={{ current_filters.student_class }}{% endif %}{% if current_filters.test %}&test={{ current_filters.test }}{% endif %}" class="btn btn-secondary">
+                            Последняя ⏭️
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4em; margin-bottom: 20px;">📊</div>
+            <h3 style="color: #4a5568; margin-bottom: 10px;">Нет данных</h3>
+            <p style="color: #718096;">Результаты тестов появятся здесь после прохождения тестов учениками.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Дополнительные действия -->
+<div class="card">
+    <h3 style="color: #2d3748; margin-bottom: 15px;">⚙️ Дополнительные действия</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="/admin/" class="btn">🛠️ Управление тестами</a>
+        <a href="{% url 'home' %}" class="btn btn-secondary">🏠 На главную</a>
+        <button onclick="window.print()" class="btn btn-secondary">🖨️ Печать отчета</button>
+    </div>
+</div>
+{% endblock %}

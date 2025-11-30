@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Вопрос {{ question_num }} из {{ total_questions }}{% endblock %}
+
+{% block content %}
+<div class="question-container">
+    <!-- Прогресс-бар -->
+    <div class="progress-container">
+        <div class="progress-bar" style="width: {{ progress }}%"></div>
+    </div>
+    
+    <!-- Информация о прогрессе -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <span class="question-number">Вопрос {{ question_num }} из {{ total_questions }}</span>
+        <div style="margin-top: 10px; color: #718096;">
+            Прогресс: {{ progress|floatformat:0 }}%
+        </div>
+    </div>
+    
+    <!-- Вопрос -->
+    <div class="question-text">
+        {{ question.text }}
+    </div>
+    
+    <!-- Варианты ответов -->
+    <form method="post" action="{% url 'submit_answer' student_test.id question_num %}">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 30px;">
+            {% for answer in answers %}
+            <label class="answer-option" for="answer_{{ answer.id }}">
+                <input 
+                    type="radio" 
+                    id="answer_{{ answer.id }}" 
+                    name="answer_id" 
+                    value="{{ answer.id }}" 
+                    required
+                    style="margin-right: 15px;"
+                >
+                <div class="answer-letter">{{ answer.letter }}</div>
+                <div class="answer-text">{{ answer.text }}</div>
+            </label>
+            {% endfor %}
+        </div>
+        
+        <!-- Кнопки навигации -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'home' %}" class="btn btn-secondary" onclick="return confirm('Вы уверены, что хотите покинуть тест? Ваш прогресс будет утерян.')">
+                🏠 На главную
+            </a>
+            
+            <div style="display: flex; gap: 15px;">
+                {% if question_num > 1 %}
+                    <a href="{% url 'quiz_question' student_test.id question_num|add:'-1' %}" class="btn btn-secondary">
+                        ← Назад
+                    </a>
+                {% endif %}
+                
+                <button type="submit" class="btn">
+                    {% if question_num == total_questions %}
+                        🎯 Завершить тест
+                    {% else %}
+                        Далее →
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Информация об ученике -->
+<div style="background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; margin-top: 20px; text-align: center;">
+    <strong style="color: #4a5568;">👤 {{ student_test.student_name }}</strong>
+    <span style="color: #718096; margin: 0 10px;">|</span>
+    <strong style="color: #4a5568;">🎓 {{ student_test.student_class }} класс</strong>
+    <span style="color: #718096; margin: 0 10px;">|</span>
+    <strong style="color: #4a5568;">📚 {{ student_test.test.title }}</strong>
+</div>
+
+<!-- Подсказка -->
+<div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 10px; padding: 15px; margin-top: 15px; text-align: center;">
+    <p style="color: #667eea; margin: 0; font-size: 14px;">
+        💡 Выберите один вариант ответа и нажмите "Далее" для продолжения
+    </p>
+</div>
+{% endblock %}

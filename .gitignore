@@ -1,0 +1,8 @@
+.venv/
+migrations/
+.idea/
+
+db.sqlite3
+
+/TestSchool/settings.py.bak
+/TestSchool/settings.py.bak2
